@@ -22,13 +22,14 @@ socket.on('addTask', (task) => {
   socket.broadcast.emit('addTask', task);
 });
 
+
 socket.on('removeTask', (id) => {
   const taskIndex = tasks.findIndex(tasks => tasks.id == id);
-  if (userIndex >= 0) {
-    tasks.splice(taskIndex, 1);
-    socket.broadcast.emit('removeTask', id);
-  }
- });
+    if (taskIndex >= 0) {
+      tasks.splice(taskIndex, 1);
+      socket.broadcast.emit('removeTask', id);
+    }
+  });
 });
 
 app.use((req, res) => {

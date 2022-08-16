@@ -8,37 +8,36 @@ const App = () => {
   const [tasks, setTasks] = useState([]);
   const [taskName, setTaskName] = useState('');
   const [socket, setSocket] = useState();
-  useEffect(() => {
-    if (!socket) {
-      setSocket(io('http://localhost:8000'));
-    }
-  }, []);
-
   const addTask = (newTask) => {
     setTasks(task => [...task, newTask]);
   };
 
   useEffect(() => {
-    socket.on('addTask', (task) => {
-    addTask(task);
-    });
-  }, [socket]);
+    const socket = io('http://localhost:8000');
+
+    socket.on('addTask', (task) => {addTask(task);});
+    socket.on('removeTask', (id) => {removeTask(id);});
+    socket.on('updateData', (tasks) => {setTasks(tasks);});
+    setSocket(socket);
+    return () => socket.close();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setSocket]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!taskName) alert("Please enter a task name");
     else {
       const newTask = { id: nanoid(), name: taskName };
-      addTask(taskName);
+      addTask(newTask);
+      socket.emit('addTask', newTask);
       setTaskName('');
     }
   };
 
   const removeTask = (id) => {
     setTasks(tasks => tasks.filter(task => task.id !== id));
-    socket.emit('removeTask', id);
+    if (socket) socket.emit('removeTask', id);
   };
-
   return (
     <div className="App" >
       <header>
@@ -47,7 +46,7 @@ const App = () => {
       <section className="tasks-section" id="tasks-section">
         <h2>Tasks</h2>
         <TasksList action={removeTask} tasks={tasks} />
-        <AddForm action={handleSubmit} taskName={taskName} setTaskName={setTaskName}/>
+        <AddForm action={handleSubmit} taskName={taskName} setTaskName={setTaskName} />
       </section>
     </div>
   );
